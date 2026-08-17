@@ -1,0 +1,16 @@
+# Deployment checklist
+
+- [ ] Create private GitHub repository.
+- [ ] Deploy with Render Blueprint or Docker/Railway.
+- [ ] Provision PostgreSQL.
+- [ ] Set a strong FOUNDER_PASSWORD secret.
+- [ ] Confirm SECRET_KEY is generated/unique.
+- [ ] Confirm COOKIE_SECURE=1.
+- [ ] Open /health and verify `status: ok`.
+- [ ] Create a test employee account.
+- [ ] Complete 2–3 test entries from another browser/device.
+- [ ] Verify founder dashboard receives the test result.
+- [ ] Verify employee does not see correct/wrong/accuracy.
+- [ ] Configure database backups.
+- [ ] Add custom domain if desired.
+- [ ] Before real use, review privacy, retention, access-control and employee-consent requirements.
