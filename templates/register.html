@@ -1,130 +1,171 @@
 <!doctype html>
 <html>
+
 <head>
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
 
-    <title>Nexora · Register</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Nexora · Employee Registration</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
 </head>
 
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <div class="brand">
-            NEXORA DATA SOLUTIONS · Training Operations Portal
-        </div>
+<div class="header">
+
+    <div class="brand">
+        NEXORA DATA SOLUTIONS · Training Operations Portal
     </div>
 
-
-    <!-- Main -->
-    <div class="container">
-
-        <div class="card narrow">
-
-            <div class="eyebrow">
-                Employee registration
-            </div>
-
-            <h1>
-                Create account
-            </h1>
-
-            <p class="muted">
-                Create your employee account to access
-                the authorized training workspace.
-            </p>
+</div>
 
 
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages() %}
+<div class="container">
 
-                {% for m in messages %}
+    <div class="card narrow">
 
-                    <div class="flash">
-                        {{ m }}
-                    </div>
-
-                {% endfor %}
-
-            {% endwith %}
-
-
-            <!-- Registration Form -->
-            <form method="post">
-
-                <input
-                    type="hidden"
-                    name="csrf_token"
-                    value="{{ csrf_token() }}"
-                >
-
-
-                <label>
-                    Date of birth
-                </label>
-
-                <input
-                    type="date"
-                    name="dob"
-                    required
-                >
-
-
-                <label>
-                    Create password
-                </label>
-
-                <input
-                    type="password"
-                    name="password"
-                    minlength="10"
-                    required
-                >
-
-
-                <label>
-                    Confirm password
-                </label>
-
-                <input
-                    type="password"
-                    name="password2"
-                    minlength="10"
-                    required
-                >
-
-
-                <button
-                    type="submit"
-                    style="width:100%; margin-top:15px;"
-                >
-                    Create account
-                </button>
-
-            </form>
-
-
-            <!-- Back to Login -->
-            <p class="muted">
-                Already have an account?
-                <a href="/login">
-                    Sign in
-                </a>
-            </p>
-
-
-            <p class="muted" style="font-size:12px;">
-                This portal uses simulated training records
-                and a fictional organization name.
-            </p>
-
+        <div class="eyebrow">
+            Employee registration
         </div>
 
+        <h1>
+            Create Employee Account
+        </h1>
+
+        <p class="muted">
+            Enter your details to create your employee account.
+        </p>
+
+
+        <!-- Flash Messages -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% for category, message in messages %}
+
+                <div class="flash">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <!-- Registration Form -->
+
+        <form
+            method="post"
+            autocomplete="off"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+
+            <!-- Employee Name -->
+
+            <label>
+                Employee Name
+            </label>
+
+            <input
+                type="text"
+                name="employee_name"
+                placeholder="Enter your full name"
+                maxlength="150"
+                required
+                autocomplete="name"
+            >
+
+
+            <!-- Date of Birth -->
+
+            <label>
+                Date of Birth
+            </label>
+
+            <input
+                type="date"
+                name="dob"
+                required
+            >
+
+
+            <!-- Password -->
+
+            <label>
+                Create Password
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                minlength="10"
+                required
+                autocomplete="new-password"
+            >
+
+
+            <!-- Confirm Password -->
+
+            <label>
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                name="password2"
+                minlength="10"
+                required
+                autocomplete="new-password"
+            >
+
+
+            <button
+                type="submit"
+                style="width:100%; margin-top:15px;"
+            >
+                Create Employee Account
+            </button>
+
+        </form>
+
+
+        <p class="muted">
+
+            Already have an account?
+
+            <a href="/login">
+                Sign in
+            </a>
+
+        </p>
+
+
+        <p
+            class="muted"
+            style="font-size:12px;"
+        >
+            Your employee name will be saved and shown to the
+            Founder/Admin in the performance dashboard.
+        </p>
+
     </div>
+
+</div>
 
 </body>
+
 </html>
