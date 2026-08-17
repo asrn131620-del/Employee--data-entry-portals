@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Nexora · Register</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="brand">
+            NEXORA DATA SOLUTIONS · Training Operations Portal
+        </div>
+    </div>
+
+
+    <!-- Main -->
+    <div class="container">
+
+        <div class="card narrow">
+
+            <div class="eyebrow">
+                Employee registration
+            </div>
+
+            <h1>
+                Create account
+            </h1>
+
+            <p class="muted">
+                Create your employee account to access
+                the authorized training workspace.
+            </p>
+
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+
+                {% for m in messages %}
+
+                    <div class="flash">
+                        {{ m }}
+                    </div>
+
+                {% endfor %}
+
+            {% endwith %}
+
+
+            <!-- Registration Form -->
+            <form method="post">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+
+                <label>
+                    Date of birth
+                </label>
+
+                <input
+                    type="date"
+                    name="dob"
+                    required
+                >
+
+
+                <label>
+                    Create password
+                </label>
+
+                <input
+                    type="password"
+                    name="password"
+                    minlength="10"
+                    required
+                >
+
+
+                <label>
+                    Confirm password
+                </label>
+
+                <input
+                    type="password"
+                    name="password2"
+                    minlength="10"
+                    required
+                >
+
+
+                <button
+                    type="submit"
+                    style="width:100%; margin-top:15px;"
+                >
+                    Create account
+                </button>
+
+            </form>
+
+
+            <!-- Back to Login -->
+            <p class="muted">
+                Already have an account?
+                <a href="/login">
+                    Sign in
+                </a>
+            </p>
+
+
+            <p class="muted" style="font-size:12px;">
+                This portal uses simulated training records
+                and a fictional organization name.
+            </p>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
