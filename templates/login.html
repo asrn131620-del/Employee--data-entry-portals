@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexora · Sign in</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">NEXORA DATA SOLUTIONS · Training Operations Portal</div>
+</div>
+
+<div class="container">
+  <div class="card narrow">
+
+    <div class="eyebrow">Secure access</div>
+    <h1>Sign in</h1>
+    <p class="muted">Access the authorized training workspace.</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}
+        <div class="flash">{{ m }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <label>Role</label>
+      <select name="role">
+        <option value="employee">Employee</option>
+        <option value="founder">Founder / Admin</option>
+      </select>
+
+      <label>Date of Birth</label>
+      <input type="date" name="dob" required>
+
+      <label>Password</label>
+      <input type="password" name="password" required>
+
+      <button type="submit">Sign in</button>
+
+    </form>
+
+    <p class="muted">
+      New employee?
+      <a href="/register">Create an account</a>
+    </p>
+
+  </div>
+</div>
+
+</body>
+</html>
