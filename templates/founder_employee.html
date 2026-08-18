@@ -1,0 +1,368 @@
+<!doctype html>
+<html>
+
+<head>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Nexora · Employee Details
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="header">
+
+    <div class="brand">
+        NEXORA DATA SOLUTIONS · Training Operations Portal
+    </div>
+
+</div>
+
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="eyebrow">
+            Founder / Admin · Employee Details
+        </div>
+
+
+        <h1>
+            {{ employee.employee_name }}
+        </h1>
+
+
+        <p class="muted">
+            Employee performance details for
+            {{ day.strftime("%d %B %Y") }}
+        </p>
+
+
+        <!-- EMPLOYEE INFORMATION -->
+
+        <div
+            style="
+                margin-top:20px;
+                padding:16px;
+                border-radius:10px;
+                background:rgba(127,127,127,0.08);
+            "
+        >
+
+            <div>
+
+                <b>
+                    Employee Name
+                </b>
+
+                <div
+                    style="margin-top:5px;"
+                >
+                    {{ employee.employee_name }}
+                </div>
+
+            </div>
+
+
+            <div style="margin-top:14px;">
+
+                <b>
+                    Employee ID
+                </b>
+
+                <div
+                    style="margin-top:5px;"
+                >
+                    {{ employee.employee_code }}
+                </div>
+
+            </div>
+
+
+            <div style="margin-top:14px;">
+
+                <b>
+                    Date of Birth
+                </b>
+
+                <div
+                    style="margin-top:5px;"
+                >
+                    {{ employee.dob.strftime("%d %B %Y") }}
+                </div>
+
+            </div>
+
+
+            <div style="margin-top:14px;">
+
+                <b>
+                    Account Status
+                </b>
+
+                <div
+                    style="margin-top:5px;"
+                >
+
+                    {% if employee.active %}
+
+                        Active
+
+                    {% else %}
+
+                        Inactive
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TODAY'S PERFORMANCE -->
+
+        <h2
+            style="
+                margin-top:28px;
+                margin-bottom:15px;
+                font-size:20px;
+            "
+        >
+            Today's Performance
+        </h2>
+
+
+        <div class="stats">
+
+
+            <div class="stat">
+
+                Completed
+
+                <b>
+                    {{ completed }}
+                </b>
+
+            </div>
+
+
+            <div class="stat">
+
+                Target
+
+                <b>
+                    {{ daily_target }}
+                </b>
+
+            </div>
+
+
+            <div class="stat">
+
+                Correct
+
+                <b>
+                    {{ correct }}
+                </b>
+
+            </div>
+
+
+            <div class="stat">
+
+                Accuracy
+
+                <b>
+                    {{ accuracy }}%
+                </b>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- PROGRESS -->
+
+        <div style="margin-top:10px;">
+
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    margin-bottom:8px;
+                "
+            >
+
+                <b>
+                    Daily Progress
+                </b>
+
+                <span class="muted">
+                    {{ completed }} / {{ daily_target }}
+                </span>
+
+            </div>
+
+
+            <div class="progress">
+
+                <div
+                    class="fill"
+                    style="
+                        width:
+                        {{
+                            (
+                                completed
+                                /
+                                daily_target
+                                *
+                                100
+                            )
+                            if daily_target
+                            else 0
+                        }}%;
+                    "
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TIME -->
+
+        <div
+            style="
+                margin-top:20px;
+                padding:14px;
+                border-radius:10px;
+                background:rgba(127,127,127,0.08);
+            "
+        >
+
+            <b>
+                Total Time
+            </b>
+
+            <div
+                style="margin-top:5px;"
+            >
+
+                {% set minutes = seconds // 60 %}
+                {% set remaining_seconds = seconds % 60 %}
+
+                {% if minutes > 0 %}
+
+                    {{ minutes }} min
+                    {{ remaining_seconds }} sec
+
+                {% else %}
+
+                    {{ remaining_seconds }} sec
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div
+            style="
+                margin-top:20px;
+                padding:14px;
+                border-radius:10px;
+                background:rgba(127,127,127,0.08);
+            "
+        >
+
+            <b>
+                Today's Status
+            </b>
+
+            <div
+                style="margin-top:5px;"
+            >
+
+                {% if completed >= daily_target %}
+
+                    Completed
+
+                {% elif completed > 0 %}
+
+                    In progress
+
+                {% else %}
+
+                    Not started
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- HISTORY LINK -->
+
+        <p style="margin-top:25px;">
+
+            <a
+                href="{{ url_for(
+                    'employee_history',
+                    employee_id=employee.id
+                ) }}"
+            >
+                View Complete Employee History
+            </a>
+
+        </p>
+
+
+        <!-- BACK -->
+
+        <p style="margin-top:15px;">
+
+            <a href="{{ url_for('founder') }}">
+                ← Back to Founder Dashboard
+            </a>
+
+        </p>
+
+
+        <!-- LOGOUT -->
+
+        <p style="margin-top:15px;">
+
+            <a href="{{ url_for('logout') }}">
+                Sign out
+            </a>
+
+        </p>
+
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
