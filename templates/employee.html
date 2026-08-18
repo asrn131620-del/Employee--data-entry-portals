@@ -1,7 +1,9 @@
 <!doctype html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
     <title>Nexora · Employee</title>
 
     <link rel="stylesheet"
@@ -10,7 +12,6 @@
 
 <body>
 
-    <!-- Header -->
     <div class="header">
         <div class="brand">
             NEXORA DATA SOLUTIONS · Training Operations Portal
@@ -18,7 +19,6 @@
     </div>
 
 
-    <!-- Main -->
     <div class="container">
 
         <div class="card">
@@ -31,9 +31,39 @@
                 Daily Data Entry Task
             </h1>
 
-            <p class="muted">
-                Complete today's 200 simulated records.
-                Your score and right/wrong counts are intentionally not displayed.
+
+            <!-- Employee Information -->
+            <div style="
+                margin-top:15px;
+                padding:14px;
+                border-radius:10px;
+                background:rgba(127,127,127,0.08);
+            ">
+
+                <div>
+                    <b>
+                        {{ employee.employee_name }}
+                    </b>
+                </div>
+
+                <div class="muted"
+                     style="margin-top:4px;font-size:13px;">
+
+                    Employee ID:
+                    <b>{{ employee.employee_code }}</b>
+
+                </div>
+
+            </div>
+
+
+            <p class="muted"
+               style="margin-top:18px;">
+
+                Complete today's 250 simulated records.
+                Your score and right/wrong counts are intentionally
+                not displayed.
+
             </p>
 
 
@@ -46,34 +76,48 @@
                     align-items:center;
                     margin-bottom:8px;
                 ">
+
                     <b id="count">
-                        {{ completed }} / 200 completed
+                        {{ completed }} / {{ daily_target }} completed
                     </b>
 
-                    <span class="muted" style="font-size:13px;">
+                    <span class="muted"
+                          style="font-size:13px;">
                         Daily task
                     </span>
+
                 </div>
 
+
                 <div class="progress">
+
                     <div
                         class="fill"
                         id="progressFill"
-                        style="width:{{ completed / 2 }}%">
-                    </div>
+                        style="
+                            width:
+                            {{ (completed / daily_target * 100)
+                               if daily_target else 0 }}%
+                        "
+                    ></div>
+
                 </div>
 
             </div>
 
 
             <!-- Reference Data -->
-            <div class="ref" id="ref" style="margin-top:24px;"></div>
+            <div
+                class="ref"
+                id="ref"
+                style="margin-top:24px;">
+            </div>
 
 
             <!-- Data Entry Form -->
             <form
                 method="post"
-                action="/employee/submit"
+                action="{{ url_for('submit') }}"
                 id="task"
             >
 
@@ -101,53 +145,74 @@
                 <div class="grid">
 
                     <div>
-                        <label>Name</label>
+
+                        <label>
+                            Name
+                        </label>
 
                         <input
                             name="name"
                             autocomplete="off"
                             required
                         >
+
                     </div>
 
 
                     <div>
-                        <label>Age</label>
+
+                        <label>
+                            Age
+                        </label>
 
                         <input
                             name="age"
                             type="number"
+                            min="1"
+                            max="120"
                             autocomplete="off"
                             required
                         >
+
                     </div>
 
 
                     <div>
-                        <label>City</label>
+
+                        <label>
+                            City
+                        </label>
 
                         <input
                             name="city"
                             autocomplete="off"
                             required
                         >
+
                     </div>
 
 
                     <div>
-                        <label>Phone</label>
+
+                        <label>
+                            Phone
+                        </label>
 
                         <input
                             name="phone"
+                            inputmode="numeric"
                             autocomplete="off"
                             required
                         >
+
                     </div>
 
                 </div>
 
 
-                <label>Email</label>
+                <label>
+                    Email
+                </label>
 
                 <input
                     name="email"
@@ -157,7 +222,6 @@
                 >
 
 
-                <!-- Actions -->
                 <div class="actions">
 
                     <button
@@ -176,11 +240,12 @@
             </form>
 
 
-            <!-- Sign Out -->
             <p style="margin-top:20px;">
-                <a href="/logout">
+
+                <a href="{{ url_for('logout') }}">
                     Sign out
                 </a>
+
             </p>
 
         </div>
@@ -190,19 +255,25 @@
 
 <script>
 
-const r = {{ records | tojson }};
+const records = {{ records | tojson }};
+
+const dailyTarget = {{ daily_target }};
 
 let i = {{ completed }};
 
 let start = Date.now();
 
 
+/* ---------------------------------------------------------
+   SHOW CURRENT RECORD
+--------------------------------------------------------- */
+
 function show() {
 
-    /* Task completed */
-    if (i >= 200) {
+    if (i >= dailyTarget) {
 
         document.querySelector(".card").innerHTML = `
+
             <div class="eyebrow">
                 Task completed
             </div>
@@ -212,32 +283,63 @@ function show() {
             </h1>
 
             <p class="muted">
-                Your 200-record task has been submitted
-                for authorized review.
+                Your ${dailyTarget}-record task has been
+                submitted for authorized review.
             </p>
 
+            <div style="
+                margin-top:20px;
+                padding:16px;
+                border-radius:10px;
+                background:rgba(127,127,127,0.08);
+            ">
+
+                <b>
+                    ${dailyTarget} / ${dailyTarget}
+                    completed
+                </b>
+
+            </div>
+
             <p style="margin-top:20px;">
-                <a href="/logout">
+
+                <a href="{{ url_for('logout') }}">
                     Sign out
                 </a>
+
             </p>
+
         `;
 
         return;
     }
 
 
-    /* Current reference record */
-    const x = r[i];
+    if (!records[i]) {
+
+        document.getElementById("ref").innerHTML =
+            "<b>Unable to load this record.</b>";
+
+        return;
+    }
+
+
+    const x = records[i];
 
 
     document.getElementById("ref").innerHTML =
+
         "<b>Reference data</b><br>" +
-        "Name: " + x.name + "<br>" +
-        "Age: " + x.age + "<br>" +
-        "City: " + x.city + "<br>" +
-        "Phone: " + x.phone + "<br>" +
-        "Email: " + x.email;
+
+        "Name: " + escapeHtml(x.name) + "<br>" +
+
+        "Age: " + escapeHtml(x.age) + "<br>" +
+
+        "City: " + escapeHtml(x.city) + "<br>" +
+
+        "Phone: " + escapeHtml(x.phone) + "<br>" +
+
+        "Email: " + escapeHtml(x.email);
 
 
     document.getElementById("idx").value = i;
@@ -245,33 +347,62 @@ function show() {
     document.getElementById("secs").value = 0;
 
 
-    /* Progress text */
     document.getElementById("count").innerText =
-        i + " / 200 completed";
+        i + " / " + dailyTarget + " completed";
 
 
-    /* Progress bar */
-    document.getElementById("progressFill").style.width =
-        (i / 2) + "%";
+    const percentage =
+        (i / dailyTarget) * 100;
+
+
+    document.getElementById(
+        "progressFill"
+    ).style.width =
+        percentage + "%";
 
 
     start = Date.now();
 }
 
 
-/* Calculate time spent on current record */
+/* ---------------------------------------------------------
+   HTML ESCAPE
+--------------------------------------------------------- */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+/* ---------------------------------------------------------
+   SAVE TIME BEFORE SUBMIT
+--------------------------------------------------------- */
+
 document.getElementById("task").addEventListener(
     "submit",
     function () {
 
         document.getElementById("secs").value =
-            Math.floor(
-                (Date.now() - start) / 1000
+            Math.max(
+                0,
+                Math.floor(
+                    (Date.now() - start) / 1000
+                )
             );
 
     }
 );
 
+
+/* ---------------------------------------------------------
+   INITIAL LOAD
+--------------------------------------------------------- */
 
 show();
 
