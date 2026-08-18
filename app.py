@@ -65,7 +65,8 @@ csrf = CSRFProtect(app)
 IST = ZoneInfo("Asia/Kolkata")
 
 DAILY_TARGET = 250
-
+MIN_ACCURACY = 80.0
+MAX_ACCURACY = 90.0
 
 def now_ist():
     """Current Indian Standard Time."""
