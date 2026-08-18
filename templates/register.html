@@ -19,6 +19,7 @@
 
 <body>
 
+
 <div class="header">
 
     <div class="brand">
@@ -66,6 +67,8 @@
             method="post"
             autocomplete="off"
         >
+
+            <!-- CSRF -->
 
             <input
                 type="hidden"
@@ -117,6 +120,13 @@
                 autocomplete="new-password"
             >
 
+            <p
+                class="muted"
+                style="font-size:12px;margin-top:4px;"
+            >
+                Password must contain at least 10 characters.
+            </p>
+
 
             <!-- Confirm Password -->
 
@@ -133,9 +143,11 @@
             >
 
 
+            <!-- Submit -->
+
             <button
                 type="submit"
-                style="width:100%; margin-top:15px;"
+                style="width:100%;margin-top:15px;"
             >
                 Create Employee Account
             </button>
@@ -143,29 +155,60 @@
         </form>
 
 
+        <!-- Login -->
+
         <p class="muted">
 
             Already have an account?
 
-            <a href="/login">
+            <a href="{{ url_for('login') }}">
                 Sign in
             </a>
 
         </p>
 
 
-        <p
-            class="muted"
-            style="font-size:12px;"
+        <!-- Information -->
+
+        <div
+            style="
+                margin-top:20px;
+                padding:14px;
+                border-radius:10px;
+                background:rgba(127,127,127,0.08);
+            "
         >
-            Your employee name will be saved and shown to the
-            Founder/Admin in the performance dashboard.
-        </p>
+
+            <p
+                class="muted"
+                style="margin:0;font-size:13px;"
+            >
+
+                After registration, your Employee ID will be
+                automatically generated and displayed on your
+                employee workspace.
+
+            </p>
+
+            <p
+                class="muted"
+                style="margin:8px 0 0;font-size:13px;"
+            >
+
+                Keep your Employee ID and password safe.
+                You will use them to sign in again later.
+
+            </p>
+
+        </div>
+
 
     </div>
 
 </div>
 
+
 </body>
 
 </html>
+            
