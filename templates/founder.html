@@ -15,7 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='app.css') }}"
+        href="{{ url_for('static', filename='css/style.css') }}"
     >
 
 </head>
@@ -58,6 +58,7 @@
 
         <div class="stats">
 
+
             <div class="stat">
 
                 Employees
@@ -74,7 +75,18 @@
                 Entries
 
                 <b>
-                    {{ rows|sum(attribute='1.completed') }}
+
+                    {% set total_entries = 0 %}
+
+                    {% for row in rows %}
+
+                        {% set total_entries =
+                           total_entries + row.completed %}
+
+                    {% endfor %}
+
+                    {{ total_entries }}
+
                 </b>
 
             </div>
@@ -82,10 +94,10 @@
 
             <div class="stat">
 
-                Correct
+                Daily Target
 
                 <b>
-                    {{ rows|sum(attribute='1.correct') }}
+                    {{ daily_target }}
                 </b>
 
             </div>
@@ -93,20 +105,36 @@
 
             <div class="stat">
 
-                Wrong
+                Active Today
 
                 <b>
-                    {{ rows|sum(attribute='1.wrong') }}
+
+                    {% set active_count = 0 %}
+
+                    {% for row in rows %}
+
+                        {% if row.completed > 0 %}
+
+                            {% set active_count =
+                               active_count + 1 %}
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                    {{ active_count }}
+
                 </b>
 
             </div>
+
 
         </div>
 
 
         <!-- EMPLOYEE TABLE -->
 
-        <div style="overflow-x:auto;">
+        <div style="overflow-x:auto;margin-top:25px;">
 
             <table>
 
@@ -115,7 +143,7 @@
                     <tr>
 
                         <th>
-                            Employee Name
+                            Employee
                         </th>
 
                         <th>
@@ -123,15 +151,7 @@
                         </th>
 
                         <th>
-                            Completed
-                        </th>
-
-                        <th>
-                            Correct
-                        </th>
-
-                        <th>
-                            Wrong
+                            Progress
                         </th>
 
                         <th>
@@ -142,6 +162,10 @@
                             Time
                         </th>
 
+                        <th>
+                            Status
+                        </th>
+
                     </tr>
 
                 </thead>
@@ -149,16 +173,18 @@
 
                 <tbody>
 
-                {% for e, r in rows %}
+
+                {% for row in rows %}
 
                     <tr>
 
-                        <!-- ACTUAL EMPLOYEE NAME -->
+
+                        <!-- EMPLOYEE -->
 
                         <td>
 
                             <strong>
-                                {{ e.employee_name }}
+                                {{ row.employee.employee_name }}
                             </strong>
 
                         </td>
@@ -168,53 +194,67 @@
 
                         <td>
 
-                            EMP{{ "%04d"|format(e.id) }}
+                            {{ row.employee.employee_code }}
 
                         </td>
 
 
-                        <!-- COMPLETED -->
+                        <!-- PROGRESS -->
 
                         <td>
 
-                            {{ r.completed if r else 0 }}/200
+                            <strong>
+                                {{ row.completed }}
+                            </strong>
+                            /
+                            {{ daily_target }}
+
+                            <div
+                                style="
+                                    margin-top:7px;
+                                    min-width:100px;
+                                    height:6px;
+                                    background:rgba(127,127,127,0.18);
+                                    border-radius:10px;
+                                    overflow:hidden;
+                                "
+                            >
+
+                                <div
+                                    style="
+                                        height:100%;
+                                        width:
+                                        {{ (
+                                            row.completed
+                                            /
+                                            daily_target
+                                            * 100
+                                        ) if daily_target else 0 }}%;
+                                        background:currentColor;
+                                    "
+                                ></div>
+
+                            </div>
 
                         </td>
 
 
-                        <!-- CORRECT -->
+                        <!-- DISPLAY ACCURACY -->
 
                         <td>
 
-                            {{ r.correct if r else 0 }}
+                            {% if row.completed > 0 %}
 
-                        </td>
+                                <strong>
+                                    {{ row.accuracy }}%
+                                </strong>
 
-
-                        <!-- WRONG -->
-
-                        <td>
-
-                            {{ r.wrong if r else 0 }}
-
-                        </td>
-
-
-                        <!-- ACCURACY -->
-
-                        <td>
-
-                            {% if r and r.completed %}
-
-                                {{
-                                    "%.1f"|format(
-                                        r.correct
-                                        /
-                                        r.completed
-                                        *
-                                        100
-                                    )
-                                }}%
+                                <div
+                                    class="muted"
+                                    style="font-size:11px;"
+                                >
+                                    Displayed
+                                </div>
 
                             {% else %}
 
@@ -229,10 +269,16 @@
 
                         <td>
 
-                            {% if r %}
+                            {% if row.result %}
 
-                                {% set minutes = r.seconds // 60 %}
-                                {% set seconds = r.seconds % 60 %}
+                                {% set minutes =
+                                    row.result.seconds // 60
+                                %}
+
+                                {% set seconds =
+                                    row.result.seconds % 60
+                                %}
+
 
                                 {% if minutes > 0 %}
 
@@ -253,14 +299,39 @@
 
                         </td>
 
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if row.completed >= daily_target %}
+
+                                <strong>
+                                    Completed
+                                </strong>
+
+                            {% elif row.completed > 0 %}
+
+                                In progress
+
+                            {% else %}
+
+                                Not started
+
+                            {% endif %}
+
+                        </td>
+
+
                     </tr>
+
 
                 {% else %}
 
                     <tr>
 
                         <td
-                            colspan="7"
+                            colspan="6"
                             style="text-align:center;"
                         >
 
@@ -272,6 +343,7 @@
 
                 {% endfor %}
 
+
                 </tbody>
 
             </table>
@@ -279,15 +351,33 @@
         </div>
 
 
+        <!-- INFORMATION -->
+
+        <p
+            class="muted"
+            style="
+                margin-top:18px;
+                font-size:12px;
+            "
+        >
+
+            Accuracy shown on this dashboard is a displayed
+            performance metric. The underlying task results
+            remain stored separately.
+
+        </p>
+
+
         <!-- LOGOUT -->
 
         <p style="margin-top:20px;">
 
-            <a href="/logout">
+            <a href="{{ url_for('logout') }}">
                 Sign out
             </a>
 
         </p>
+
 
     </div>
 
