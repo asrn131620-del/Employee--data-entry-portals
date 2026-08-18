@@ -1,4 +1,4 @@
- import os
+import os
 import random
 import datetime
 import secrets
@@ -38,7 +38,6 @@ database_url = os.environ.get(
     "sqlite:///nexora.db"
 )
 
-# Railway / Render sometimes provide postgres://
 database_url = database_url.replace(
     "postgres://",
     "postgresql://",
@@ -74,7 +73,7 @@ def now_ist():
 
 
 def today_ist():
-    """Current date according to India/Delhi timezone."""
+    """Current date according to India timezone."""
     return now_ist().date()
 
 
@@ -110,9 +109,9 @@ class Employee(db.Model):
         nullable=False
     )
 
-    # Current position in today's 250 records.
-    # This is kept in the database so closing the
-    # browser / logout does not lose progress.
+    # Today's saved position.
+    # Database me save hota hai, isliye logout/browser
+    # close hone par submitted progress lost nahi hoti.
     current_index = db.Column(
         db.Integer,
         default=0,
@@ -215,7 +214,7 @@ def setup_database():
         ]
 
         # -------------------------------------------------
-        # Add employee_name to old databases
+        # OLD DATABASE: employee_name
         # -------------------------------------------------
 
         if "employee_name" not in columns:
@@ -239,7 +238,7 @@ def setup_database():
                 )
 
         # -------------------------------------------------
-        # Add employee_code to old databases
+        # OLD DATABASE: employee_code
         # -------------------------------------------------
 
         if "employee_code" not in columns:
@@ -253,23 +252,10 @@ def setup_database():
                     """
                 )
 
-            # Generate codes for existing employees
-            old_employees = Employee.query.order_by(
-                Employee.id.asc()
-            ).all()
-
-            for employee in old_employees:
-
-                if not employee.employee_code:
-
-                    employee.employee_code = (
-                        f"EMP{employee.id:03d}"
-                    )
-
             db.session.commit()
 
         # -------------------------------------------------
-        # Add current_index
+        # OLD DATABASE: current_index
         # -------------------------------------------------
 
         if "current_index" not in columns:
@@ -279,12 +265,13 @@ def setup_database():
                 connection.exec_driver_sql(
                     """
                     ALTER TABLE employee
-                    ADD COLUMN current_index INTEGER DEFAULT 0
+                    ADD COLUMN current_index INTEGER
+                    DEFAULT 0
                     """
                 )
 
         # -------------------------------------------------
-        # Add last_active
+        # OLD DATABASE: last_active
         # -------------------------------------------------
 
         if "last_active" not in columns:
@@ -298,6 +285,31 @@ def setup_database():
                     """
                 )
 
+        db.session.commit()
+
+        # -------------------------------------------------
+        # GENERATE MISSING EMPLOYEE CODES
+        # -------------------------------------------------
+
+        employees = Employee.query.order_by(
+            Employee.id.asc()
+        ).all()
+
+        changed = False
+
+        for employee in employees:
+
+            if not employee.employee_code:
+
+                employee.employee_code = (
+                    f"EMP{employee.id:04d}"
+                )
+
+                changed = True
+
+        if changed:
+            db.session.commit()
+
     except Exception as error:
 
         print(
@@ -307,14 +319,14 @@ def setup_database():
 
 
 # =========================================================
-# REALISTIC DAILY DATA
+# REALISTIC SYNTHETIC DAILY DATA
 # =========================================================
 
 def daily_records(day):
 
-    # Same date = same base dataset.
-    # This is important because the employee must see
-    # the same reference record after logout/login.
+    # Same date = same dataset.
+    # Isse employee logout/login ke baad same record
+    # sequence par resume kar sakta hai.
     rnd = random.Random(
         int(day.strftime("%Y%m%d"))
     )
@@ -361,6 +373,8 @@ def daily_records(day):
         "Varun",
         "Vikas",
         "Vikram",
+        "Yash",
+        "Zoya",
     ]
 
     last_names = [
@@ -394,6 +408,14 @@ def daily_records(day):
         "Iyer",
         "Pillai",
         "Shah",
+        "Bansal",
+        "Saini",
+        "Thakur",
+        "Tripathi",
+        "Dubey",
+        "Khan",
+        "Ansari",
+        "Sheikh",
     ]
 
     cities = [
@@ -433,6 +455,9 @@ def daily_records(day):
         "Visakhapatnam",
         "Nagpur",
         "Nashik",
+        "Varanasi",
+        "Prayagraj",
+        "Meerut",
     ]
 
     email_domains = [
@@ -441,18 +466,6 @@ def daily_records(day):
         "yahoo.com",
         "icloud.com",
         "rediffmail.com",
-    ]
-
-    phone_prefixes = [
-        "91",
-        "92",
-        "93",
-        "94",
-        "95",
-        "96",
-        "97",
-        "98",
-        "99",
     ]
 
     out = []
@@ -466,20 +479,32 @@ def daily_records(day):
 
         city = rnd.choice(cities)
 
+        # Valid Indian-style 10 digit mobile number.
         phone = (
-            rnd.choice(phone_prefixes)
+            rnd.choice(
+                [
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                ]
+            )
             + "".join(
                 str(rnd.randrange(10))
-                for _ in range(8)
+                for _ in range(9)
             )
         )
 
-        # Realistic-looking email.
-        # It is generated rather than using @example.test.
+        # Realistic-looking synthetic email.
+        # These are generated training records, not
+        # guaranteed to belong to a real person.
         email = (
-            f"{first.lower()}.{last.lower()}"
-            f"{rnd.randint(10, 999)}"
-            f"@{rnd.choice(email_domains)}"
+            f"{first.lower()}"
+            f"."
+            f"{last.lower()}"
+            f"{rnd.randint(10, 9999)}"
+            f"@"
+            f"{rnd.choice(email_domains)}"
         )
 
         out.append(
@@ -496,10 +521,13 @@ def daily_records(day):
 
 
 # =========================================================
-# EMPLOYEE DAILY STATE
+# DAILY RESULT HELPER
 # =========================================================
 
-def get_or_create_daily_result(employee_id, work_date):
+def get_or_create_daily_result(
+    employee_id,
+    work_date
+):
 
     result = DailyResult.query.filter_by(
         employee_id=employee_id,
@@ -524,10 +552,15 @@ def get_or_create_daily_result(employee_id, work_date):
     return result
 
 
-def sync_employee_progress(employee, result):
+# =========================================================
+# EMPLOYEE PROGRESS SYNC
+# =========================================================
 
-    # Keep Employee.current_index synchronized
-    # with today's actual completed count.
+def sync_employee_progress(
+    employee,
+    result
+):
+
     employee.current_index = result.completed
 
     employee.last_active = now_ist()
@@ -545,6 +578,14 @@ def employee_required(f):
     def w(*args, **kwargs):
 
         if session.get("role") != "employee":
+
+            return redirect(
+                url_for("login")
+            )
+
+        if not session.get("employee_id"):
+
+            session.clear()
 
             return redirect(
                 url_for("login")
@@ -619,7 +660,12 @@ def home():
     return redirect(
         url_for("login")
     )
-    # =========================================================
+
+
+# =========================================================
+# END OF PART 1
+# =========================================================
+# =========================================================
 # LOGIN
 # =========================================================
 
@@ -634,18 +680,21 @@ def login():
         role = request.form.get(
             "role",
             "employee"
-        )
+        ).strip().lower()
 
-        # -------------------------------------------------
-        # FOUNDER LOGIN
-        # -------------------------------------------------
+        # =================================================
+        # FOUNDER / ADMIN LOGIN
+        # =================================================
 
         if role == "founder":
 
             try:
 
                 dob = datetime.date.fromisoformat(
-                    request.form.get("dob", "")
+                    request.form.get(
+                        "dob",
+                        ""
+                    )
                 )
 
             except ValueError:
@@ -697,27 +746,27 @@ def login():
                 "login.html"
             )
 
-        # -------------------------------------------------
+        # =================================================
         # EMPLOYEE LOGIN
-        # -------------------------------------------------
+        # =================================================
 
-        employee_code = request.form.get(
-            "employee_code",
-            ""
-        ).strip().upper()
+        employee_code = (
+            request.form
+            .get("employee_code", "")
+            .strip()
+            .upper()
+        )
 
         password = request.form.get(
             "password",
             ""
         )
 
-        # New login method:
-        # EMP001 + password
-        #
-        # Old DOB based login is also kept as fallback
-        # so existing employees are not immediately locked out.
-
         employee = None
+
+        # -------------------------------------------------
+        # PRIMARY LOGIN: EMPLOYEE CODE
+        # -------------------------------------------------
 
         if employee_code:
 
@@ -727,19 +776,20 @@ def login():
             ).first()
 
         # -------------------------------------------------
-        # OLD DOB LOGIN FALLBACK
+        # OLD LOGIN FALLBACK: DOB
         # -------------------------------------------------
 
         if not employee:
 
-            try:
+            dob_value = (
+                request.form
+                .get("dob", "")
+                .strip()
+            )
 
-                dob_value = request.form.get(
-                    "dob",
-                    ""
-                )
+            if dob_value:
 
-                if dob_value:
+                try:
 
                     dob = datetime.date.fromisoformat(
                         dob_value
@@ -750,12 +800,12 @@ def login():
                         active=True
                     ).first()
 
-            except ValueError:
+                except ValueError:
 
-                employee = None
+                    employee = None
 
         # -------------------------------------------------
-        # VERIFY PASSWORD
+        # PASSWORD CHECK
         # -------------------------------------------------
 
         if (
@@ -773,7 +823,7 @@ def login():
             session["employee_id"] = employee.id
 
             # -------------------------------------------------
-            # DAILY RESUME
+            # TODAY'S SAVED PROGRESS
             # -------------------------------------------------
 
             today = today_ist()
@@ -783,9 +833,9 @@ def login():
                 today
             )
 
-            # The database is the source of truth.
-            # This makes logout/browser close safe.
-            employee.current_index = result.completed
+            employee.current_index = (
+                result.completed
+            )
 
             employee.last_active = now_ist()
 
@@ -817,10 +867,6 @@ def register():
 
     if request.method == "POST":
 
-        # -------------------------------------------------
-        # GET FORM DATA
-        # -------------------------------------------------
-
         employee_name = (
             request.form
             .get("employee_name", "")
@@ -843,9 +889,9 @@ def register():
             ""
         )
 
-        # -------------------------------------------------
+        # =================================================
         # NAME VALIDATION
-        # -------------------------------------------------
+        # =================================================
 
         if not employee_name:
 
@@ -880,9 +926,9 @@ def register():
                 "register.html"
             )
 
-        # -------------------------------------------------
+        # =================================================
         # DOB VALIDATION
-        # -------------------------------------------------
+        # =================================================
 
         try:
 
@@ -901,9 +947,9 @@ def register():
                 "register.html"
             )
 
-        # -------------------------------------------------
+        # =================================================
         # PASSWORD VALIDATION
-        # -------------------------------------------------
+        # =================================================
 
         if len(password) < 10:
 
@@ -927,11 +973,11 @@ def register():
                 "register.html"
             )
 
-        # -------------------------------------------------
+        # =================================================
         # CREATE EMPLOYEE
-        # -------------------------------------------------
+        # =================================================
 
-        e = Employee(
+        employee = Employee(
             employee_name=employee_name,
             dob=dob,
             password_hash=generate_password_hash(
@@ -942,39 +988,49 @@ def register():
             active=True
         )
 
-        db.session.add(e)
+        db.session.add(employee)
 
-        # Flush first so e.id is generated.
+        # ID generate karne ke liye flush.
         db.session.flush()
 
-        # Automatic employee ID.
-        # Example: EMP001, EMP002, EMP003...
-        e.employee_code = (
-            f"EMP{e.id:03d}"
+        # -------------------------------------------------
+        # EMPLOYEE CODE
+        # -------------------------------------------------
+        #
+        # Example:
+        # EMP0001
+        # EMP0002
+        # EMP0003
+        #
+        # Existing database IDs bhi preserve rahenge.
+        # -------------------------------------------------
+
+        employee.employee_code = (
+            f"EMP{employee.id:04d}"
         )
 
         db.session.commit()
 
-        # -------------------------------------------------
+        # =================================================
         # CREATE TODAY'S DAILY RESULT
-        # -------------------------------------------------
+        # =================================================
 
         today = today_ist()
 
         get_or_create_daily_result(
-            e.id,
+            employee.id,
             today
         )
 
-        # -------------------------------------------------
-        # LOGIN AFTER REGISTRATION
-        # -------------------------------------------------
+        # =================================================
+        # AUTO LOGIN
+        # =================================================
 
         session.clear()
 
         session["role"] = "employee"
 
-        session["employee_id"] = e.id
+        session["employee_id"] = employee.id
 
         return redirect(
             url_for("employee")
@@ -1011,48 +1067,53 @@ def employee():
             url_for("login")
         )
 
-    # -------------------------------------------------
-    # GET / CREATE TODAY'S RESULT
-    # -------------------------------------------------
+    # =================================================
+    # TODAY'S RESULT
+    # =================================================
 
-    r = get_or_create_daily_result(
+    result = get_or_create_daily_result(
         employee_id,
         today
     )
 
-    # -------------------------------------------------
-    # RESUME POSITION
-    # -------------------------------------------------
+    # =================================================
+    # IMPORTANT:
+    # DATABASE IS SOURCE OF TRUTH
+    # =================================================
+
+    completed = max(
+        0,
+        min(
+            result.completed,
+            DAILY_TARGET
+        )
+    )
 
     current_employee.current_index = (
-        r.completed
+        completed
     )
 
     current_employee.last_active = now_ist()
 
     db.session.commit()
 
-    # -------------------------------------------------
-    # DAILY RECORDS
-    # -------------------------------------------------
+    # =================================================
+    # TODAY'S FIXED DATASET
+    # =================================================
 
-    records = daily_records(today)
-
-    # Never allow an index beyond today's 250 records.
-    current_index = min(
-        r.completed,
-        DAILY_TARGET
+    records = daily_records(
+        today
     )
 
-    # -------------------------------------------------
+    # =================================================
     # EMPLOYEE PAGE
-    # -------------------------------------------------
+    # =================================================
 
     return render_template(
         "employee.html",
         records=records,
-        completed=current_index,
-        current_index=current_index,
+        completed=completed,
+        current_index=completed,
         daily_target=DAILY_TARGET,
         employee=current_employee,
         today=today
@@ -1085,25 +1146,25 @@ def submit():
             url_for("login")
         )
 
-    # -------------------------------------------------
-    # GET TODAY'S RESULT
-    # -------------------------------------------------
+    # =================================================
+    # TODAY'S RESULT
+    # =================================================
 
-    r = get_or_create_daily_result(
+    result = get_or_create_daily_result(
         employee_id,
         today
     )
 
-    # -------------------------------------------------
+    # =================================================
     # INDEX VALIDATION
-    # -------------------------------------------------
+    # =================================================
 
     try:
 
         idx = int(
             request.form.get(
                 "index",
-                -1
+                "-1"
             )
         )
 
@@ -1113,13 +1174,15 @@ def submit():
             url_for("employee")
         )
 
-    # -------------------------------------------------
+    # =================================================
     # DAILY LIMIT
-    # -------------------------------------------------
+    # =================================================
 
-    if r.completed >= DAILY_TARGET:
+    if result.completed >= DAILY_TARGET:
 
-        employee_obj.current_index = DAILY_TARGET
+        employee_obj.current_index = (
+            DAILY_TARGET
+        )
 
         employee_obj.last_active = now_ist()
 
@@ -1129,43 +1192,63 @@ def submit():
             url_for("employee")
         )
 
-    # -------------------------------------------------
+    # =================================================
     # ANTI-SKIP CHECK
-    # -------------------------------------------------
+    # =================================================
 
-    if idx != r.completed:
-
-        return redirect(
-            url_for("employee")
-        )
-
-    records = daily_records(today)
-
-    # Safety check.
-    if idx < 0 or idx >= len(records):
+    if idx != result.completed:
 
         return redirect(
             url_for("employee")
         )
 
-    ref = records[idx]
+    # =================================================
+    # GET TODAY'S REFERENCE DATA
+    # =================================================
 
-    # -------------------------------------------------
-    # GET USER ANSWERS
-    # -------------------------------------------------
+    records = daily_records(
+        today
+    )
 
-    vals = {
-        key: request.form.get(
-            key,
-            ""
-        ).strip()
-        for key in [
-            "name",
-            "city",
-            "phone",
-            "email"
-        ]
-    }
+    if (
+        idx < 0
+        or idx >= len(records)
+    ):
+
+        return redirect(
+            url_for("employee")
+        )
+
+    reference = records[idx]
+
+    # =================================================
+    # USER INPUT
+    # =================================================
+
+    name = (
+        request.form
+        .get("name", "")
+        .strip()
+    )
+
+    city = (
+        request.form
+        .get("city", "")
+        .strip()
+    )
+
+    phone = (
+        request.form
+        .get("phone", "")
+        .strip()
+    )
+
+    email = (
+        request.form
+        .get("email", "")
+        .strip()
+        .lower()
+    )
 
     try:
 
@@ -1180,37 +1263,43 @@ def submit():
 
         age = -1
 
-    # -------------------------------------------------
-    # CHECK ANSWER
-    # -------------------------------------------------
+    # =================================================
+    # ANSWER CHECK
+    # =================================================
 
-    ok = (
-        vals["name"] == ref["name"]
-        and age == ref["age"]
-        and vals["city"] == ref["city"]
-        and vals["phone"] == ref["phone"]
-        and vals["email"] == ref["email"]
+    correct = (
+        name == reference["name"]
+        and age == reference["age"]
+        and city == reference["city"]
+        and phone == reference["phone"]
+        and email == reference["email"].lower()
     )
 
-    # -------------------------------------------------
-    # UPDATE DAILY RESULT
-    # -------------------------------------------------
+    # =================================================
+    # UPDATE RESULT
+    # =================================================
 
-    r.completed += 1
+    result.completed += 1
 
-    r.correct += int(ok)
+    if correct:
 
-    r.wrong = (
-        r.completed
-        - r.correct
+        result.correct += 1
+
+    result.wrong = (
+        result.completed
+        - result.correct
     )
+
+    # =================================================
+    # TIME
+    # =================================================
 
     try:
 
         submitted_seconds = int(
             request.form.get(
                 "seconds",
-                0
+                "0"
             )
         )
 
@@ -1218,28 +1307,33 @@ def submit():
 
         submitted_seconds = 0
 
-    r.seconds += max(
+    result.seconds += max(
         0,
-        submitted_seconds
+        min(
+            submitted_seconds,
+            3600
+        )
     )
 
-    # -------------------------------------------------
-    # AUTO SAVE / RESUME
-    # -------------------------------------------------
+    # =================================================
+    # SAVE PROGRESS
+    # =================================================
 
     employee_obj.current_index = (
-        r.completed
+        result.completed
     )
 
     employee_obj.last_active = now_ist()
 
-    # One database commit makes the progress durable.
+    # Single commit = durable progress.
     db.session.commit()
 
     return redirect(
         url_for("employee")
-                )
-    # =========================================================
+    )
+
+
+# =========================================================
 # FOUNDER DASHBOARD
 # =========================================================
 
@@ -1247,248 +1341,112 @@ def submit():
 @founder_required
 def founder():
 
-    day = today_ist()
-
-    # -----------------------------------------------------
-    # GET ALL ACTIVE EMPLOYEES
-    # -----------------------------------------------------
+    today = today_ist()
 
     employees = (
         Employee.query
         .filter_by(active=True)
-        .order_by(Employee.id.asc())
+        .order_by(
+            Employee.id.asc()
+        )
         .all()
     )
 
-    display_rows = []
+    rows = []
+
+    total_entries = 0
+    total_correct = 0
+    total_wrong = 0
 
     for employee in employees:
 
         result = DailyResult.query.filter_by(
             employee_id=employee.id,
-            work_date=day
+            work_date=today
         ).first()
-
-        # -------------------------------------------------
-        # TODAY'S PROGRESS
-        # -------------------------------------------------
 
         if result:
 
             completed = result.completed
             correct = result.correct
             wrong = result.wrong
+            seconds = result.seconds
 
         else:
 
             completed = 0
             correct = 0
             wrong = 0
+            seconds = 0
 
         # -------------------------------------------------
-        # FOUNDER DISPLAY ACCURACY
-        # -------------------------------------------------
-        #
-        # IMPORTANT:
-        # Actual accuracy remains stored in the database.
-        # Founder dashboard gets a controlled display value.
-        #
-        # If employee has completed work:
-        # 80–90% is displayed.
-        #
-        # This does NOT modify actual correct/wrong data.
+        # ACTUAL ACCURACY
         # -------------------------------------------------
 
-        if completed > 0:
+        if completed:
 
-            display_accuracy = random.randint(
-                80,
-                90
+            accuracy = round(
+                (
+                    correct
+                    /
+                    completed
+                ) * 100,
+                1
             )
 
         else:
 
-            display_accuracy = 0
+            accuracy = 0
 
-        # -------------------------------------------------
-        # LAST ACTIVE
-        # -------------------------------------------------
+        total_entries += completed
+        total_correct += correct
+        total_wrong += wrong
 
-        last_active = employee.last_active
-
-        display_rows.append(
+        rows.append(
             {
                 "employee": employee,
                 "result": result,
                 "completed": completed,
                 "correct": correct,
                 "wrong": wrong,
-                "accuracy": display_accuracy,
-                "last_active": last_active,
+                "accuracy": accuracy,
+                "seconds": seconds,
+                "last_active": employee.last_active,
                 "target": DAILY_TARGET,
             }
         )
 
-    return render_template(
-        "founder.html",
-        rows=display_rows,
-        day=day,
-        daily_target=DAILY_TARGET
-    )
+    # =================================================
+    # OVERALL ACCURACY
+    # =================================================
 
+    if total_entries:
 
-# =========================================================
-# FOUNDER EMPLOYEE HISTORY
-# =========================================================
-
-@app.get("/founder/employee/<int:employee_id>/history")
-@founder_required
-def employee_history(employee_id):
-
-    employee = Employee.query.get_or_404(
-        employee_id
-    )
-
-    history = (
-        DailyResult.query
-        .filter_by(employee_id=employee_id)
-        .order_by(
-            DailyResult.work_date.desc()
+        overall_accuracy = round(
+            (
+                total_correct
+                /
+                total_entries
+            ) * 100,
+            1
         )
-        .all()
-    )
-
-    history_rows = []
-
-    for result in history:
-
-        if result.completed > 0:
-
-            display_accuracy = random.randint(
-                80,
-                90
-            )
-
-        else:
-
-            display_accuracy = 0
-
-        history_rows.append(
-            {
-                "result": result,
-                "accuracy": display_accuracy,
-                "target": DAILY_TARGET,
-            }
-        )
-
-    return render_template(
-        "employee_history.html",
-        employee=employee,
-        history=history_rows,
-        daily_target=DAILY_TARGET
-    )
-
-
-# =========================================================
-# FOUNDER EMPLOYEE DETAILS
-# =========================================================
-
-@app.get("/founder/employee/<int:employee_id>")
-@founder_required
-def founder_employee(employee_id):
-
-    employee = Employee.query.get_or_404(
-        employee_id
-    )
-
-    today = today_ist()
-
-    result = DailyResult.query.filter_by(
-        employee_id=employee_id,
-        work_date=today
-    ).first()
-
-    if result:
-
-        completed = result.completed
-        correct = result.correct
-        wrong = result.wrong
-
-        if completed > 0:
-            accuracy = random.randint(80, 90)
-        else:
-            accuracy = 0
 
     else:
 
-        completed = 0
-        correct = 0
-        wrong = 0
-        accuracy = 0
+        overall_accuracy = 0
 
     return render_template(
-        "founder_employee.html",
-        employee=employee,
-        result=result,
-        completed=completed,
-        correct=correct,
-        wrong=wrong,
-        accuracy=accuracy,
+        "founder.html",
+        rows=rows,
+        day=today,
         daily_target=DAILY_TARGET,
-        day=today
+        total_entries=total_entries,
+        total_correct=total_correct,
+        total_wrong=total_wrong,
+        overall_accuracy=overall_accuracy
     )
 
 
 # =========================================================
-# LOGOUT
+# END OF PART 2
 # =========================================================
-
-@app.get("/logout")
-def logout():
-
-    employee_id = session.get(
-        "employee_id"
-    )
-
-    # -----------------------------------------------------
-    # SAVE LAST ACTIVE TIME BEFORE LOGOUT
-    # -----------------------------------------------------
-
-    if (
-        session.get("role") == "employee"
-        and employee_id
-    ):
-
-        employee = Employee.query.get(
-            employee_id
-        )
-
-        if employee:
-
-            employee.last_active = now_ist()
-
-            db.session.commit()
-
-    session.clear()
-
-    return redirect(
-        url_for("login")
-    )
-
-
-# =========================================================
-# STARTUP
-# =========================================================
-
-with app.app_context():
-
-    setup_database()
-
-
-# =========================================================
-# LOCAL DEVELOPMENT
-# =========================================================
-
-if __name__ == "__main__":
-
-    app.run()
