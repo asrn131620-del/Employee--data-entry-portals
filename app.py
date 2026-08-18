@@ -1450,3 +1450,178 @@ def founder():
 # =========================================================
 # END OF PART 2
 # =========================================================
+
+# =========================================================
+# FOUNDER EMPLOYEE HISTORY
+# =========================================================
+
+@app.get("/founder/employee/<int:employee_id>/history")
+@founder_required
+def employee_history(employee_id):
+
+    employee = Employee.query.get_or_404(
+        employee_id
+    )
+
+    history = (
+        DailyResult.query
+        .filter_by(
+            employee_id=employee_id
+        )
+        .order_by(
+            DailyResult.work_date.desc()
+        )
+        .all()
+    )
+
+    history_rows = []
+
+    for result in history:
+
+        if result.completed:
+
+            accuracy = round(
+                (
+                    result.correct
+                    /
+                    result.completed
+                ) * 100,
+                1
+            )
+
+        else:
+
+            accuracy = 0
+
+        history_rows.append(
+            {
+                "result": result,
+                "accuracy": accuracy,
+                "target": DAILY_TARGET,
+            }
+        )
+
+    return render_template(
+        "employee_history.html",
+        employee=employee,
+        history=history_rows,
+        daily_target=DAILY_TARGET
+    )
+
+
+# =========================================================
+# FOUNDER EMPLOYEE DETAILS
+# =========================================================
+
+@app.get("/founder/employee/<int:employee_id>")
+@founder_required
+def founder_employee(employee_id):
+
+    employee = Employee.query.get_or_404(
+        employee_id
+    )
+
+    today = today_ist()
+
+    result = DailyResult.query.filter_by(
+        employee_id=employee_id,
+        work_date=today
+    ).first()
+
+    if result:
+
+        completed = result.completed
+        correct = result.correct
+        wrong = result.wrong
+        seconds = result.seconds
+
+        if completed:
+
+            accuracy = round(
+                (
+                    correct
+                    /
+                    completed
+                ) * 100,
+                1
+            )
+
+        else:
+
+            accuracy = 0
+
+    else:
+
+        completed = 0
+        correct = 0
+        wrong = 0
+        seconds = 0
+        accuracy = 0
+
+    return render_template(
+        "founder_employee.html",
+        employee=employee,
+        result=result,
+        completed=completed,
+        correct=correct,
+        wrong=wrong,
+        seconds=seconds,
+        accuracy=accuracy,
+        daily_target=DAILY_TARGET,
+        day=today
+    )
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+@app.get("/logout")
+def logout():
+
+    employee_id = session.get(
+        "employee_id"
+    )
+
+    # -----------------------------------------------------
+    # SAVE LAST ACTIVE TIME
+    # -----------------------------------------------------
+
+    if (
+        session.get("role") == "employee"
+        and employee_id
+    ):
+
+        employee = Employee.query.get(
+            employee_id
+        )
+
+        if employee:
+
+            employee.last_active = now_ist()
+
+            db.session.commit()
+
+    session.clear()
+
+    return redirect(
+        url_for("login")
+    )
+
+
+# =========================================================
+# STARTUP
+# =========================================================
+
+with app.app_context():
+
+    setup_database()
+
+
+# =========================================================
+# LOCAL DEVELOPMENT
+# =========================================================
+
+if __name__ == "__main__":
+
+    app.run()
