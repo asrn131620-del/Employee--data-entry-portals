@@ -184,7 +184,18 @@
                         <td>
 
                             <strong>
-                                {{ row.employee.employee_name }}
+
+                                <a
+                                    href="{{ url_for(
+                                        'founder_employee',
+                                        employee_id=row.employee.id
+                                    ) }}"
+                                >
+
+                                    {{ row.employee.employee_name }}
+
+                                </a>
+
                             </strong>
 
                         </td>
@@ -386,3 +397,4 @@
 </body>
 
 </html>
+                        
